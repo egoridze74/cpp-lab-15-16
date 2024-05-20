@@ -1,0 +1,3 @@
+C:/Users/Egor/Desktop/Учёба/ЯПы/cpp-lab-15-16/cmake-build-debug/CMakeFiles/cpp_lab_15_16.dir
+C:/Users/Egor/Desktop/Учёба/ЯПы/cpp-lab-15-16/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Egor/Desktop/Учёба/ЯПы/cpp-lab-15-16/cmake-build-debug/CMakeFiles/rebuild_cache.dir
