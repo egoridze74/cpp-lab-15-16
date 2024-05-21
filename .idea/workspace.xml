@@ -24,8 +24,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.~lock.КорнеенкоЕВ_лаб15-16.docx#" beforeDir="false" afterPath="$PROJECT_DIR$/.~lock.КорнеенкоЕВ_лаб15-16.docx#" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Matrix.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Matrix.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Matrix.h" beforeDir="false" afterPath="$PROJECT_DIR$/Matrix.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.exe" beforeDir="false" afterPath="$PROJECT_DIR$/main.exe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/КорнеенкоЕВ_лаб15-16.docx" beforeDir="false" afterPath="$PROJECT_DIR$/КорнеенкоЕВ_лаб15-16.docx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -106,7 +106,7 @@
       <option name="presentableId" value="Default" />
       <updated>1716218068423</updated>
       <workItem from="1716218070402" duration="19030000" />
-      <workItem from="1716287966510" duration="8702000" />
+      <workItem from="1716287966510" duration="16799000" />
     </task>
     <servers />
   </component>

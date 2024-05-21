@@ -7,6 +7,9 @@
 #include <future>
 #include <chrono>
 
+#define POTOKI 16
+//std::thread::hardware_concurrency()
+
 
 //Constructors
 template<typename T>
@@ -197,29 +200,34 @@ Matrix<T> Matrix<T>::operator*(const T& k) const //multiplication by number
 template<typename T>
 Matrix<T> Matrix<T>::operator+(const Matrix<T>& other) const
 {
+    std::cout << "Addition started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
     Matrix result(this->Height(), this->Width());
     for (size_t i = 0; i < this->Height(); i++)
     {
         for (size_t j = 0; j < this->Width(); j++)
-        {
-            T value1 = this->get_value(i, j);
-            T value2 = other.get_value(i, j);
-            result.set_value(i, j, value1 + value2);
-        }
+            result.set_value(i, j, this->get_value(i, j) + other.get_value(i, j));
     }
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other) const
 {
+    std::cout << "Parallel addition started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
 
-    unsigned int threads_max = (this->height <= std::thread::hardware_concurrency() ? this->height
-            : std::thread::hardware_concurrency());
+    unsigned int threads_max = (this->height <= POTOKI ? this->height
+            : POTOKI);
     unsigned int opers_per_thread = this->height / threads_max;
     std::stack<std::thread> threads;
 
@@ -243,12 +251,20 @@ Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other) const
         threads.top().join();
         threads.pop();
     }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other, unsigned int blocks) const
 {
+    std::cout << "Parallel addition started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
 
@@ -273,34 +289,53 @@ Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other, unsigned int blocks) c
     }
 
 
-        for (unsigned int i = 0; i < futures.size(); ++i)
+    for (unsigned int i = 0; i < futures.size(); ++i)
         {
             futures.top().wait();
             futures.pop();
         }
-        return result;
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
+    return result;
 }
 
 
 template<typename T>
 Matrix<T> Matrix<T>::operator-(const Matrix<T>& other) const
 {
+    std::cout << "Deduction started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
 
     Matrix result(this->Height(), this->Width());
-    result = *this + (other * (-1));
+    for (size_t i = 0; i < this->Height(); i++)
+    {
+        for (size_t j = 0; j < this->Width(); j++)
+            result.set_value(i, j, this->get_value(i, j) + other.get_value(i, j));
+    }
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other) const
 {
+    std::cout << "Parallel deduction started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
 
-    unsigned int threads_max = (this->height <= std::thread::hardware_concurrency() ? this->height
-            : std::thread::hardware_concurrency());
+    unsigned int threads_max = (this->height <= POTOKI ? this->height
+            : POTOKI);
     unsigned int opers_per_thread = this->height / threads_max;
     std::stack<std::thread> threads;
 
@@ -327,11 +362,20 @@ Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other) const
         threads.top().join();
         threads.pop();
     }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
+    return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other, unsigned int blocks) const
 {
+    std::cout << "Parallel deduction started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Height() != other.Height() || this->Width() != other.Width())
         throw std::invalid_argument("Matrixes must have same dimension to do this operation");
 
@@ -360,12 +404,20 @@ Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other, unsigned int blocks
         futures.top().wait();
         futures.pop();
     }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::operator*(const Matrix<T>& other) const
 {
+    std::cout << "Multiplication started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Width() != other.Height())
         throw std::invalid_argument("Width of first matrix must be equal to height of second matrix"
                                     " to do this operation");
@@ -384,17 +436,25 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T>& other) const
             }
             result.set_value(i, j, value_sum);
         }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
 {
+    std::cout << "Parallel multiplication started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Width() != other.Height())
         throw std::invalid_argument("Width of first matrix must be equal to height of second matrix"
                                     " to do this operation");
-    unsigned int threads_max = (this->height <= std::thread::hardware_concurrency() ? this->height
-            : std::thread::hardware_concurrency());
+    unsigned int threads_max = (this->height <= POTOKI ? this->height
+            : POTOKI);
     unsigned int opers_per_thread = this->height / threads_max;
     std::stack<std::thread> threads;
 
@@ -429,12 +489,20 @@ Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
         threads.top().join();
         threads.pop();
     }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other, unsigned int blocks) const
 {
+    std::cout << "Parallel multiplication started. ";
+    const auto start  = std::chrono::high_resolution_clock::now();
     if (this->Width() != other.Height())
         throw std::invalid_argument("Width of first matrix must be equal to height of second matrix"
                                     " to do this operation");
@@ -475,6 +543,12 @@ Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other, unsigned int bloc
         futures.top().wait();
         futures.pop();
     }
+
+    const auto stop  = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::nanoseconds(stop-start).count();
+    elapsed /= 1000; //micro
+    elapsed /= 1000; //milli
+    std::cout << "Process took " << elapsed << "ms" << std::endl;
     return result;
 }
 

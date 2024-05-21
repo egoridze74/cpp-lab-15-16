@@ -1,17 +1,32 @@
 #include "Matrix.h"
 #include "Matrix.cpp"
 #include <iostream>
-#include <fstream>
-#include <thread>
-#include <future>
-#include <chrono>
+#include <random>
 
 int main() {
-    int k1 = 3, k2 = 4;
-    Matrix<double> matrix1, matrix2, matrix3, matrix4;
-    std::cin >> matrix1;
-    std::cin >> matrix2;
-    std::cout << matrix1.multiply_parallel(matrix2, 4);
+    std::random_device r;
+    std::default_random_engine e(r());
+    std::uniform_int_distribution<int> d(1, 100);
+    Matrix<double> matrix1(1000, 1000), matrix2(1000, 1000), matrix3(1000, 1000);
+
+    for (int i = 0; i < 1000; ++i)
+        for (int j = 0; j < 1000; ++j)
+        {
+            matrix1.set_value(i, j, d(e));
+            matrix2.set_value(i, j, d(e));
+        }
+    /* for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1 + matrix2;
+    for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1 - matrix2;
+     for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1 * matrix2; */
+    for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1.sum_parallel(matrix2);
+    for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1.deduct_parallel(matrix2);
+    for (int i = 0; i < 5; ++i)
+        matrix3 = matrix1.multiply_parallel(matrix2);
 /*
     std::cout << "Insert matrix1" << std::endl;
         3 3
