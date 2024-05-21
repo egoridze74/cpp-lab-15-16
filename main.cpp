@@ -11,7 +11,7 @@ int main() {
     Matrix<double> matrix1, matrix2, matrix3, matrix4;
     std::cin >> matrix1;
     std::cin >> matrix2;
-    std::cout << matrix1.sum_async(matrix2);
+    std::cout << matrix1.multiply_parallel(matrix2, 4);
 /*
     std::cout << "Insert matrix1" << std::endl;
         3 3

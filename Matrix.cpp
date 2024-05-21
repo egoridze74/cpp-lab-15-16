@@ -5,6 +5,7 @@
 #include <thread>
 #include <stack>
 #include <future>
+#include <chrono>
 
 
 //Constructors
@@ -232,10 +233,8 @@ Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other) const
         threads.emplace([j, k, &result, this, &other]()
             {
                 for (size_t l = j; l < k; ++l)
-                {
                     for (size_t m = 0; m < this->width; ++m)
                         result.set_value(l, m, this->get_value(l, m) + other.get_value(l, m));
-                }
             });
     }
 
@@ -257,7 +256,29 @@ Matrix<T> Matrix<T>::sum_parallel(const Matrix<T>& other, unsigned int blocks) c
 
     std::stack<std::future<void>> futures;
 
+    if (this->height < blocks)
+        blocks = this->height;
+    unsigned int opers_per_thread = this->height / blocks;
+    for (unsigned int i = 0; i < blocks; ++i)
+    {
+        size_t j = opers_per_thread * i;
+        size_t k = (i == blocks - 1 ? this->height : j + opers_per_thread);
 
+        futures.emplace(std::async(std::launch::async, [j, k, &result, this, &other]() mutable
+        {
+            for (size_t l = j; l < k; ++l)
+                for (size_t m = 0; m < this->width; ++m)
+                    result.set_value(l, m, this->get_value(l, m) + other.get_value(l, m));
+        }));
+    }
+
+
+        for (unsigned int i = 0; i < futures.size(); ++i)
+        {
+            futures.top().wait();
+            futures.pop();
+        }
+        return result;
 }
 
 
@@ -309,6 +330,40 @@ Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other) const
 }
 
 template<typename T>
+Matrix<T> Matrix<T>::deduct_parallel(const Matrix<T>& other, unsigned int blocks) const
+{
+    if (this->Height() != other.Height() || this->Width() != other.Width())
+        throw std::invalid_argument("Matrixes must have same dimension to do this operation");
+
+    Matrix result(this->Height(), this->Width());
+
+    std::stack<std::future<void>> futures;
+
+    if (this->height < blocks)
+        blocks = this->height;
+    unsigned int opers_per_thread = this->height / blocks;
+    for (unsigned int i = 0; i < blocks; ++i)
+    {
+        size_t j = opers_per_thread * i;
+        size_t k = (i == blocks - 1 ? this->height : j + opers_per_thread);
+
+        futures.emplace(std::async(std::launch::async, [j, k, &result, this, &other]() mutable
+        {
+            for (size_t l = j; l < k; ++l)
+                for (size_t m = 0; m < this->width; ++m)
+                    result.set_value(l, m, this->get_value(l, m) - other.get_value(l, m));
+        }));
+    }
+
+    for (unsigned int i = 0; i < futures.size(); ++i)
+    {
+        futures.top().wait();
+        futures.pop();
+    }
+    return result;
+}
+
+template<typename T>
 Matrix<T> Matrix<T>::operator*(const Matrix<T>& other) const
 {
     if (this->Width() != other.Height())
@@ -335,9 +390,9 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T>& other) const
 template<typename T>
 Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
 {
-    if (this->Height() != other.Height() || this->Width() != other.Width())
-        throw std::invalid_argument("Matrixes must have same dimension to do this operation");
-
+    if (this->Width() != other.Height())
+        throw std::invalid_argument("Width of first matrix must be equal to height of second matrix"
+                                    " to do this operation");
     unsigned int threads_max = (this->height <= std::thread::hardware_concurrency() ? this->height
             : std::thread::hardware_concurrency());
     unsigned int opers_per_thread = this->height / threads_max;
@@ -353,7 +408,6 @@ Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
         threads.emplace([j, k, &result, this, &other]()
                         {
                             for (size_t l = j; l < k; ++l)
-                            {
                                 for (size_t m = 0; m < this->width; ++m)
                                 {
                                     T value_sum = 0;
@@ -367,7 +421,6 @@ Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
                                     }
                                     result.set_value(l, m, value_sum);
                                 }
-                            }
                         });
     }
 
@@ -375,6 +428,52 @@ Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other) const
     {
         threads.top().join();
         threads.pop();
+    }
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::multiply_parallel(const Matrix<T>& other, unsigned int blocks) const
+{
+    if (this->Width() != other.Height())
+        throw std::invalid_argument("Width of first matrix must be equal to height of second matrix"
+                                    " to do this operation");
+    Matrix result(this->Height(), this->Width());
+
+    std::stack<std::future<void>> futures;
+
+    if (this->height < blocks)
+        blocks = this->height;
+    unsigned int opers_per_thread = this->height / blocks;
+    for (unsigned int i = 0; i < blocks; ++i)
+    {
+        size_t j = opers_per_thread * i;
+        size_t k = (i == blocks - 1 ? this->height : j + opers_per_thread);
+
+        futures.emplace(std::async(std::launch::async, [j, k, &result, this, &other]() mutable
+                        {
+                            for (size_t l = j; l < k; ++l)
+                                for (size_t m = 0; m < this->width; ++m)
+                                {
+                                    T value_sum = 0;
+                                    for (size_t n = 0; n< this->Width(); ++n)
+                                    {
+                                        T value1;
+                                        T value2;
+                                        value1 = this->get_value(l, n);
+                                        value2 = other.get_value(n, m);
+                                        value_sum += value1 * value2;
+                                    }
+                                    result.set_value(l, m, value_sum);
+                                }
+                        }));
+    }
+
+
+    for (unsigned int i = 0; i < futures.size(); ++i)
+    {
+        futures.top().wait();
+        futures.pop();
     }
     return result;
 }

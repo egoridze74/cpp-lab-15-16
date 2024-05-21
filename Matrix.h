@@ -61,9 +61,13 @@ public:
 
     Matrix deduct_parallel(const Matrix& other) const;
 
+    Matrix deduct_parallel(const Matrix<T>& other, unsigned int blocks) const;
+
     Matrix operator*(const Matrix& other) const; //multiplication
 
     Matrix multiply_parallel(const Matrix& other) const;
+
+    Matrix multiply_parallel(const Matrix<T>& other, unsigned int blocks) const;
 
 
     //Elementary operations
